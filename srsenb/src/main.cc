@@ -629,6 +629,8 @@ int main(int argc, char* argv[])
 
   cout << endl << "---  Modified Version for MobiSense  ---" << endl << endl;
 
+  AO_LogsHelper::create_log_files();
+
   srsran_debug_handle_crash(argc, argv);
   parse_args(&args, argc, argv);
 
