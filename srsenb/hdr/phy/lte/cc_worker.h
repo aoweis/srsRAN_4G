@@ -68,6 +68,9 @@ private:
   // AO start
   std::ofstream pusch_snr_file;
   std::ofstream pucch_snr_file;
+  // Channel estimation files
+  std::ofstream pusch_chest_file;
+  std::ofstream pucch_chest_file;
   // AO end
   constexpr static float PUSCH_RL_SNR_DB_TH = 1.0f;
   constexpr static float PUCCH_RL_CORR_TH   = 0.15f;
