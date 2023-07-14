@@ -66,6 +66,9 @@ cc_worker::~cc_worker()
 {
   AO_LogsHelper::close_lookup_file(pusch_snr_file);
   AO_LogsHelper::close_lookup_file(pucch_snr_file);
+  AO_LogsHelper::close_lookup_file(pusch_chest_file);
+  AO_LogsHelper::close_lookup_file(pucch_chest_file);
+
   srsran_softbuffer_tx_free(&temp_mbsfn_softbuffer);
   srsran_enb_dl_free(&enb_dl);
   srsran_enb_ul_free(&enb_ul);
@@ -97,9 +100,16 @@ void cc_worker::init(phy_common* phy_, uint32_t cc_idx_)
   uint32_t         nof_prb    = phy_->get_nof_prb(cc_idx);
   uint32_t         sf_len     = SRSRAN_SF_LEN_PRB(nof_prb);
   srsran_cfr_cfg_t cfr_config = phy_->get_cfr_config();
+
+  // AO start
+  // Open snr files
   AO_LogsHelper::open_lookup_file(pusch_snr_file, PUSCH_SNR_FILE);
   AO_LogsHelper::open_lookup_file(pucch_snr_file, PUCCH_SNR_FILE);
-
+  // Open channel estimation files
+  AO_LogsHelper::open_lookup_file(pusch_chest_file, PUSCH_CHEST_FILE);
+  AO_LogsHelper::open_lookup_file(pucch_chest_file, PUCCH_CHEST_FILE);
+  // AO end
+  
   // Init cell here
   for (uint32_t p = 0; p < phy->get_nof_ports(cc_idx); p++) {
     signal_buffer_rx[p] = srsran_vec_cf_malloc(2 * sf_len);
@@ -384,23 +394,40 @@ bool cc_worker::decode_pusch_rnti(stack_interface_phy_lte::ul_sched_grant_t& ul_
   
 
     // AO start
-    std::stringstream ss;
-    ss << std::hex << "0x" << rnti << std::dec;
+    // channel estimation file
+    float rsrp = enb_ul.chest_res.rsrp_dBfs;
+    float epre = enb_ul.chest_res.epre_dBfs;
+    float noise_estimate = enb_ul.chest_res.noise_estimate_dbFs;
+    std::stringstream ss0;
+    ss0 << std::hex << "0x" << rnti << std::dec;
+    if (not isnan(rsrp) and not iszero(rsrp)) {ss0 << "," << rsrp;}
+    else {ss0  << ",n/a";}
+    if (not isnan(epre) and not iszero(epre)) {ss0 << "," << epre;}
+    else {ss0  << ",n/a";}
+    if (not isnan(noise_estimate) and not iszero(noise_estimate)) {ss0 << "," << noise_estimate;}
+    else {ss0  << ",n/a";}
+    std::string s0 = ss0.str();
+    AO_LogsHelper::add_time_stamp_line(pusch_chest_file, s0);
+    // AO end
+
+    // AO start
+    std::stringstream ss1;
+    ss1 << std::hex << "0x" << rnti << std::dec;
     if (not isnan(snr_db) and not iszero(snr_db)) {
-       ss << "," << snr_db;
+       ss1 << "," << snr_db;
     }
     else {
-      ss  << ",n/a";
+      ss1  << ",n/a";
     }
-    ss 
+    ss1 
     << "," << pusch_res.crc 
     << "," << pusch_res.epre_dbfs 
     << "," << pusch_res.evm
     << "," << ul_cfg.pusch.grant.tb.tbs 
     << "," << ul_cfg.pusch.grant.nof_re 
     << "," << ul_cfg.pusch.grant.tb.nof_bits;
-    std::string s = ss.str();
-    AO_LogsHelper::add_time_stamp_line(pusch_snr_file, s);
+    std::string s1 = ss1.str();
+    AO_LogsHelper::add_time_stamp_line(pusch_snr_file, s1);
     // AO end
   }
   return true;
@@ -468,19 +495,55 @@ int cc_worker::decode_pucch()
         if (srsran_enb_ul_get_pucch(&enb_ul, &ul_sf, &ul_cfg.pucch, &pucch_res)) {
           Error("Error getting PUCCH");
           // AO start
-          std::stringstream ss;
-          ss << "0x" << std::hex << rnti << std::dec << "," << pucch_res.snr_db << "," << pucch_res.detected;
-          std::string s = ss.str();
-          AO_LogsHelper::add_time_stamp_line(pucch_snr_file, s);
+          std::stringstream ss0;
+          ss0 << "0x" << std::hex << rnti << std::dec << "," << pucch_res.snr_db << "," << pucch_res.detected;
+          std::string s0 = ss0.str();
+          AO_LogsHelper::add_time_stamp_line(pucch_snr_file, s0);
+          // AO end
+
+          // AO start
+          // channel estimation file
+          std::stringstream ss1;
+          float rsrp = enb_ul.chest_res.rsrp_dBfs;
+          float epre = enb_ul.chest_res.epre_dBfs;
+          float noise_estimate = enb_ul.chest_res.noise_estimate_dbFs;
+          ss1 << "0x" << std::hex << rnti << std::dec;
+          if (not isnan(rsrp) and not iszero(rsrp)) {ss1 << "," << rsrp;}
+          else {ss1  << ",n/a";}
+          if (not isnan(epre) and not iszero(epre)) {ss1 << "," << epre;}
+          else {ss1  << ",n/a";}
+          if (not isnan(noise_estimate) and not iszero(noise_estimate)) {ss1 << "," << noise_estimate;}
+          else {ss1  << ",n/a";}
+          ss1 << "," << pucch_res.detected;
+          std::string s1 = ss1.str();
+          AO_LogsHelper::add_time_stamp_line(pucch_chest_file, s1);
           // AO end
           continue;
         }
         
         // AO start
-        std::stringstream ss;
-        ss << "0x" << std::hex << rnti << std::dec << "," << pucch_res.snr_db << "," << pucch_res.detected;
-        std::string s = ss.str();
-        AO_LogsHelper::add_time_stamp_line(pucch_snr_file, s);
+        std::stringstream ss0;
+        ss0 << "0x" << std::hex << rnti << std::dec << "," << pucch_res.snr_db << "," << pucch_res.detected;
+        std::string s0 = ss0.str();
+        AO_LogsHelper::add_time_stamp_line(pucch_snr_file, s0);
+        // AO end
+
+        // AO start
+        // channel estimation file
+        std::stringstream ss1;
+        float rsrp = enb_ul.chest_res.rsrp_dBfs;
+        float epre = enb_ul.chest_res.epre_dBfs;
+        float noise_estimate = enb_ul.chest_res.noise_estimate_dbFs;
+        ss1 << "0x" << std::hex << rnti << std::dec;
+        if (not isnan(rsrp) and not iszero(rsrp)) {ss1 << "," << rsrp;}
+        else {ss1  << ",n/a";}
+        if (not isnan(epre) and not iszero(epre)) {ss1 << "," << epre;}
+        else {ss1  << ",n/a";}
+        if (not isnan(noise_estimate) and not iszero(noise_estimate)) {ss1 << "," << noise_estimate;}
+        else {ss1  << ",n/a";}
+        ss1 << "," << pucch_res.detected;
+        std::string s1 = ss1.str();
+        AO_LogsHelper::add_time_stamp_line(pucch_chest_file, s1);
         // AO end
 
         // Send UCI data to MAC
