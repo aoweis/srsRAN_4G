@@ -87,6 +87,7 @@ class AO_LogsHelper
     void static create_log_files()
     {
         create_rnti_to_tmsi_file();
+        create_tmsi_to_imsi_file();
         create_pusch_snr_file();
         create_pucch_snr_file();
         create_wb_cqi_file();
