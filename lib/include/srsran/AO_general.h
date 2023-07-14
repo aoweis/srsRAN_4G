@@ -12,6 +12,10 @@
 #define TMSI_TO_IMSI_FILE_NAME "/tmp/tmsi_to_imsi.csv"
 #define PUSCH_SNR_FILE "/tmp/pusch_snr_rnti.csv"
 #define PUCCH_SNR_FILE "/tmp/pucch_snr_rnti.csv"
+// Channel estimation files
+#define PUSCH_CHEST_FILE "/tmp/pusch_chest.csv"
+#define PUCCH_CHEST_FILE "/tmp/pucch_chest.csv"
+
 #define WB_CQI_FILE      "/tmp/wb_cqi.csv"
 //#define SB_CQI_LOG      "SB_CQI.csv"
 #define SB_CQI_FILE    "/tmp/sb_cqi.csv"
@@ -90,6 +94,8 @@ class AO_LogsHelper
         create_tmsi_to_imsi_file();
         create_pusch_snr_file();
         create_pucch_snr_file();
+        create_pusch_chest_file();
+        create_pucch_chest_file();
         create_wb_cqi_file();
         create_sb_cqi_file();
         create_pmi_file();
@@ -146,6 +152,17 @@ class AO_LogsHelper
     {        
         createLookupFile(PUCCH_SNR_FILE,"time stamp,time stamp double,rnti,snr,detected");
     };
+
+    // Channel estimation files
+    void static create_pusch_chest_file()
+    {
+        createLookupFile(PUSCH_CHEST_FILE,"time stamp,time stamp double,rnti,rsrp,epre,noise_est"); // Remember to change the header
+    };
+    void static create_pucch_chest_file()
+    {
+        createLookupFile(PUCCH_CHEST_FILE,"time stamp,time stamp double,rnti,rsrp,epre,noise_est");
+    };
+
     void static create_wb_cqi_file()
     {        
         createLookupFile(WB_CQI_FILE,"time stamp,time stamp double,rnti,scell_index,wb_cqi");
