@@ -160,7 +160,7 @@ class AO_LogsHelper
     };
     void static create_pucch_chest_file()
     {
-        createLookupFile(PUCCH_CHEST_FILE,"time stamp,time stamp double,rnti,rsrp,epre,noise_est");
+        createLookupFile(PUCCH_CHEST_FILE,"time stamp,time stamp double,rnti,rsrp,epre,noise_est,detected");
     };
 
     void static create_wb_cqi_file()
